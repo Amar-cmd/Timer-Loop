@@ -1,0 +1,10 @@
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primaryDarkColor</item>
+        <item name="colorPrimaryDark">@color/primaryColor</item>
+        <item name="colorAccent">@color/accentColor</item>
+        <item name="android:windowBackground">@color/primaryColor</item>
+        <item name="android:textColor">@color/pickerTextColor</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

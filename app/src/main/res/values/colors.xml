@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primaryColor">#BEC2DD</color>
+    <color name="primaryDarkColor">#303F9F</color>
+    <color name="accentColor">#FF4081</color>
+    <color name="pickerTextColor">#000000</color> <!-- Black color for light theme -->
+    <color name="navigationBarColorLight">#00FF0000</color> <!-- Change this to your preferred light mode color -->
+    <color name="toolbarColorLight">#FF0000</color> <!-- Change this to your preferred light mode color -->
+
+</resources>

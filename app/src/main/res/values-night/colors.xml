@@ -1,0 +1,9 @@
+<resources>
+    <color name="primaryColor">#738D9A</color>
+    <color name="primaryDarkColor">#263238</color>
+    <color name="accentColor">#FF5252</color>
+    <color name="pickerTextColor">#FFFFFF</color> <!-- White color for dark theme -->
+    <color name="navigationBarColorDark">#000000FF</color>
+    <color name="toolbarColorDark">#0000FF</color> <!-- Change this to your preferred dark mode color -->
+
+</resources>
