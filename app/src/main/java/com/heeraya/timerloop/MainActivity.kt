@@ -3,6 +3,8 @@ package com.heeraya.timerloop
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Color
+import android.media.Ringtone
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Bundle
@@ -38,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private var loopCount = 0
     private var initialTimeInMilliseconds: Long = 0
     private var timeLeftInMilliseconds: Long = 0
+    private var currentRingtone: Ringtone? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         val toolbar: Toolbar = findViewById(R.id.my_toolbar)
         setSupportActionBar(toolbar)
+        toolbar.setTitleTextColor(Color.parseColor("#ffffff"))
 
         val soundIcon: ImageButton = findViewById(R.id.sound_icon)
         soundIcon.setOnClickListener {
@@ -106,8 +110,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        window.decorView.systemUiVisibility =
-            if (isDarkTheme()) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+//        window.decorView.systemUiVisibility =
+//            if (isDarkTheme()) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
 
         // Fetch the selected ringtone URI each time the activity resumes
         val sharedPreferences = getSharedPreferences("ringtone_prefs", Context.MODE_PRIVATE)
@@ -164,9 +168,7 @@ class MainActivity : AppCompatActivity() {
                     timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
                 timeLeftInMilliseconds -= updateInterval
                 handler.postDelayed(runnable, updateInterval)  // Update every 100 milliseconds
-                if (ringtone.isPlaying) {
-                    ringtone.stop()
-                }
+                currentRingtone?.stop()
             } else if (loopCount-- > 0) {
                 timeLeftInMilliseconds = initialTimeInMilliseconds
                 startCountDownTimer()
@@ -184,13 +186,18 @@ class MainActivity : AppCompatActivity() {
                 stopButton.visibility = View.VISIBLE
                 resetButton.visibility = View.VISIBLE
 
-                ringtone.play()
+                currentRingtone = RingtoneManager.getRingtone(this, selectedRingtoneUri)
+                currentRingtone?.play()
+                stopButton.visibility = View.VISIBLE
+
+//                ringtone.play()
             }
         }
         handler.postDelayed(runnable, 0)
     }
 
     private fun cancelTimer() {
+        handler.removeCallbacks(runnable) // This stops the timer
         stopTimer()
         updateTimerText(0)
         progressBar.visibility = View.GONE
@@ -201,9 +208,9 @@ class MainActivity : AppCompatActivity() {
         secondPicker.visibility = View.VISIBLE
         loopPicker.visibility = View.VISIBLE
         startButton.visibility = View.VISIBLE
-        stopButton.visibility = View.VISIBLE
         resetButton.visibility = View.VISIBLE
     }
+
 
     private fun pauseOrResumeTimer() {
         if (pauseButton.text == "Pause") {
@@ -216,10 +223,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopTimer() {
-        if (this::handler.isInitialized && this::runnable.isInitialized) {
-            handler.removeCallbacks(runnable)
-        }
+        currentRingtone?.stop()
+        stopButton.visibility = View.GONE
     }
+
 
     private fun resetTimer() {
         stopTimer()

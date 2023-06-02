@@ -7,7 +7,6 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
-        android:gravity="top"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:background="?attr/colorPrimary">
@@ -17,6 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
+            android:layout_marginRight="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/sound_icon_description"
             android:minWidth="32dp"
@@ -147,6 +147,8 @@
                 android:layout_weight="2"
                 android:text="@string/cancel"
                 android:visibility="gone"
+                android:padding="15dp"
+
                 style="?android:attr/button" />
 
             <Button
@@ -158,6 +160,8 @@
                 android:layout_weight="2"
                 android:text="@string/pause"
                 android:visibility="gone"
+                android:padding="15dp"
+
                 style="?android:attr/button" />
 
 
@@ -182,16 +186,12 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
                 android:text="@string/start"
+                android:layout_weight="2"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:padding="15dp"
                 style="?android:attr/button" />
 
-            <Button
-                android:id="@+id/stop_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-
-                android:text="@string/stop"
-                style="?android:attr/button" />
 
             <Button
                 android:id="@+id/reset_button"
@@ -199,9 +199,26 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
                 android:text="@string/reset"
+                android:layout_weight="2"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:padding="15dp"
+
                 style="?android:attr/button" />
 
         </LinearLayout>
+        <Button
+            android:id="@+id/stop_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="50dp"
+            android:layout_marginVertical="20dp"
+            android:text="@string/stop"
+            android:visibility="gone"
+            android:padding="15dp"
+
+            style="?android:attr/button" />
+
 
     </LinearLayout>
 
