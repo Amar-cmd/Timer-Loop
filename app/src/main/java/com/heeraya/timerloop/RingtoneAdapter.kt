@@ -34,18 +34,41 @@ class RingtoneAdapter(
         val ringtoneName: TextView = itemView.findViewById(R.id.ringtone_name)
         val radioButton: RadioButton = itemView.findViewById(R.id.ringtone_radio_button)
 
-        init {
-            itemView.setOnClickListener {
-                selectedIndex = adapterPosition
-                notifyDataSetChanged()
+//        init {
+//            itemView.setOnClickListener {
+//                selectedIndex = adapterPosition
+//                notifyDataSetChanged()
+//
+//                // Save selected ringtone URI to shared preferences
+//                val selectedRingtone = ringtoneList[selectedIndex]
+//                editor.putString("selected_ringtone_uri", selectedRingtone.uri.toString()).apply()
+//
+//                onRingtoneSelected(selectedRingtone)
+//            }
+//        }
+init {
+    itemView.setOnClickListener {
+        // Stop the currently playing ringtone
+        stopCurrentRingtone()
 
-                // Save selected ringtone URI to shared preferences
-                val selectedRingtone = ringtoneList[selectedIndex]
-                editor.putString("selected_ringtone_uri", selectedRingtone.uri.toString()).apply()
+        // Update the selected index and play the new ringtone
+        selectedIndex = adapterPosition
 
-                onRingtoneSelected(selectedRingtone)
-            }
-        }
+        val selectedRingtone = ringtoneList[selectedIndex]
+        currentRingtone = selectedRingtone
+        currentRingtone?.ringtone?.play()
+
+        // Save selected ringtone URI to shared preferences
+        editor.putString("selected_ringtone_uri", selectedRingtone.uri.toString()).apply()
+
+        // Notify the adapter to update the view
+        notifyDataSetChanged()
+
+        // Call the external handler
+        onRingtoneSelected(selectedRingtone)
+    }
+}
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RingtoneViewHolder {

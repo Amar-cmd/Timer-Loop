@@ -106,14 +106,26 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        window.decorView.systemUiVisibility = if (isDarkTheme()) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        window.decorView.systemUiVisibility =
+            if (isDarkTheme()) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+
+        // Fetch the selected ringtone URI each time the activity resumes
+        val sharedPreferences = getSharedPreferences("ringtone_prefs", Context.MODE_PRIVATE)
+        val selectedRingtoneUriString = sharedPreferences.getString("selected_ringtone_uri", null)
+        selectedRingtoneUri = if (selectedRingtoneUriString != null) {
+            Uri.parse(selectedRingtoneUriString)
+        } else {
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+        }
     }
+
 
     private fun startTimer() {
         val hoursToMilliseconds = hourPicker.value * 60 * 60 * 1000
         val minutesToMilliseconds = minutePicker.value * 60 * 1000
         val secondsToMilliseconds = secondPicker.value * 1000
-        initialTimeInMilliseconds = hoursToMilliseconds + minutesToMilliseconds + secondsToMilliseconds.toLong()
+        initialTimeInMilliseconds =
+            hoursToMilliseconds + minutesToMilliseconds + secondsToMilliseconds.toLong()
         timeLeftInMilliseconds = initialTimeInMilliseconds
         loopCount = loopPicker.value - 1  // Decrease loopCount by 1 before the first run
 
@@ -129,7 +141,8 @@ class MainActivity : AppCompatActivity() {
         pauseButton.visibility = View.VISIBLE
         pauseButton.text = "Pause"
 
-        progressBar.max = initialTimeInMilliseconds.toInt()  // The max progress corresponds to the total time
+        progressBar.max =
+            initialTimeInMilliseconds.toInt()  // The max progress corresponds to the total time
 
         if (this::handler.isInitialized && this::runnable.isInitialized) {
             handler.removeCallbacks(runnable)
@@ -147,7 +160,8 @@ class MainActivity : AppCompatActivity() {
         runnable = Runnable {
             if (timeLeftInMilliseconds > 0) {
                 updateTimerText(timeLeftInMilliseconds)
-                progressBar.progress = timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
+                progressBar.progress =
+                    timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
                 timeLeftInMilliseconds -= updateInterval
                 handler.postDelayed(runnable, updateInterval)  // Update every 100 milliseconds
                 if (ringtone.isPlaying) {
@@ -224,11 +238,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateTimerText(timeLeftInMilliseconds: Long) {
         val hours = TimeUnit.MILLISECONDS.toHours(timeLeftInMilliseconds)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(timeLeftInMilliseconds - TimeUnit.HOURS.toMillis(hours))
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(timeLeftInMilliseconds - TimeUnit.HOURS.toMillis(hours) - TimeUnit.MINUTES.toMillis(minutes))
-        val milliseconds = TimeUnit.MILLISECONDS.toMillis(timeLeftInMilliseconds - TimeUnit.HOURS.toMillis(hours) - TimeUnit.MINUTES.toMillis(minutes) - TimeUnit.SECONDS.toMillis(seconds))
+        val minutes =
+            TimeUnit.MILLISECONDS.toMinutes(timeLeftInMilliseconds - TimeUnit.HOURS.toMillis(hours))
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(
+            timeLeftInMilliseconds - TimeUnit.HOURS.toMillis(hours) - TimeUnit.MINUTES.toMillis(
+                minutes
+            )
+        )
+        val milliseconds = TimeUnit.MILLISECONDS.toMillis(
+            timeLeftInMilliseconds - TimeUnit.HOURS.toMillis(hours) - TimeUnit.MINUTES.toMillis(
+                minutes
+            ) - TimeUnit.SECONDS.toMillis(seconds)
+        )
 
-        timerTextView.text = String.format(Locale.getDefault(), "%02d:%02d:%02d.%03d", hours, minutes, seconds, milliseconds)
+        timerTextView.text = String.format(
+            Locale.getDefault(),
+            "%02d:%02d:%02d.%03d",
+            hours,
+            minutes,
+            seconds,
+            milliseconds
+        )
     }
 
 

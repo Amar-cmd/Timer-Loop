@@ -2,6 +2,7 @@ package com.heeraya.timerloop
 
 import android.content.Context
 import android.database.Cursor
+import android.media.AudioManager
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Bundle
@@ -14,6 +15,7 @@ class RingtoneListActivity : AppCompatActivity() {
 
     private lateinit var ringtoneRecyclerView: RecyclerView
     private lateinit var volumeSlider: SeekBar
+    private lateinit var audioManager: AudioManager
 
     private var ringtoneAdapter: RingtoneAdapter? = null
 
@@ -23,6 +25,7 @@ class RingtoneListActivity : AppCompatActivity() {
 
         ringtoneRecyclerView = findViewById(R.id.ringtone_recycler_view)
         volumeSlider = findViewById(R.id.volumeSlider)
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         // Get a RingtoneManager
         val manager = RingtoneManager(this)
@@ -46,13 +49,13 @@ class RingtoneListActivity : AppCompatActivity() {
         ringtoneRecyclerView.adapter = ringtoneAdapter
 
         // Set the max value and current value of the SeekBar
-        volumeSlider.max = 100
-        volumeSlider.progress = 100
+        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_RING)
+        volumeSlider.max = maxVolume
+        volumeSlider.progress = audioManager.getStreamVolume(AudioManager.STREAM_RING)
 
         volumeSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val volume = progress / 100.0f
-                // No way to change volume of Ringtone
+                audioManager.setStreamVolume(AudioManager.STREAM_RING, progress, 0)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
