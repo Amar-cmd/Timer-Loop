@@ -84,4 +84,5 @@ class RingtoneListActivity : AppCompatActivity() {
         super.onPause()
         ringtoneAdapter?.stopCurrentRingtone()
     }
+
 }

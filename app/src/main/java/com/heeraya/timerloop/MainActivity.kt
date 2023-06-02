@@ -3,6 +3,7 @@ package com.heeraya.timerloop
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.database.Cursor
 import android.graphics.Color
 import android.media.Ringtone
 import android.media.RingtoneManager
@@ -41,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private var initialTimeInMilliseconds: Long = 0
     private var timeLeftInMilliseconds: Long = 0
     private var currentRingtone: Ringtone? = null
+    private var beepRingtone: Ringtone? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,10 +90,18 @@ class MainActivity : AppCompatActivity() {
         minutePicker.maxValue = 59
         secondPicker.maxValue = 59
         loopPicker.minValue = 1
-        loopPicker.maxValue = 10
+        loopPicker.maxValue = 99
 
         val sharedPreferences = getSharedPreferences("ringtone_prefs", Context.MODE_PRIVATE)
         val selectedRingtoneUriString = sharedPreferences.getString("selected_ringtone_uri", null)
+
+        val beepRingtoneUriString = sharedPreferences.getString("beep_ringtone_uri", null)
+        beepRingtone = if (beepRingtoneUriString != null) {
+            RingtoneManager.getRingtone(this, Uri.parse(beepRingtoneUriString))
+        } else {
+            null
+        }
+
         selectedRingtoneUri = if (selectedRingtoneUriString != null) {
             Uri.parse(selectedRingtoneUriString)
         } else {
@@ -116,6 +126,14 @@ class MainActivity : AppCompatActivity() {
         // Fetch the selected ringtone URI each time the activity resumes
         val sharedPreferences = getSharedPreferences("ringtone_prefs", Context.MODE_PRIVATE)
         val selectedRingtoneUriString = sharedPreferences.getString("selected_ringtone_uri", null)
+
+        val beepRingtoneUriString = sharedPreferences.getString("beep_ringtone_uri", null)
+        beepRingtone = if (beepRingtoneUriString != null) {
+            RingtoneManager.getRingtone(this, Uri.parse(beepRingtoneUriString))
+        } else {
+            null
+        }
+
         selectedRingtoneUri = if (selectedRingtoneUriString != null) {
             Uri.parse(selectedRingtoneUriString)
         } else {
@@ -157,22 +175,74 @@ class MainActivity : AppCompatActivity() {
         startCountDownTimer()
     }
 
+//    private fun startCountDownTimer() {
+//        val updateInterval: Long = 100  // We update every 100 milliseconds
+//        var ringtone = RingtoneManager.getRingtone(this, selectedRingtoneUri)
+//
+//        runnable = Runnable {
+//            if (timeLeftInMilliseconds > 0) {
+//                updateTimerText(timeLeftInMilliseconds)
+//                progressBar.progress =
+//                    timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
+//                timeLeftInMilliseconds -= updateInterval
+//                handler.postDelayed(runnable, updateInterval)  // Update every 100 milliseconds
+//                currentRingtone?.stop()
+//            } else if (loopCount-- > 0) {
+//                timeLeftInMilliseconds = initialTimeInMilliseconds
+//                startCountDownTimer()
+//            } else {
+//                timerTextView.text = "Finished!"
+//
+//                progressBar.visibility = View.GONE
+//                cancelButton.visibility = View.GONE
+//                pauseButton.visibility = View.GONE
+//                hourPicker.visibility = View.VISIBLE
+//                minutePicker.visibility = View.VISIBLE
+//                secondPicker.visibility = View.VISIBLE
+//                loopPicker.visibility = View.VISIBLE
+//                startButton.visibility = View.VISIBLE
+//                stopButton.visibility = View.VISIBLE
+//                resetButton.visibility = View.VISIBLE
+//
+//                currentRingtone = RingtoneManager.getRingtone(this, selectedRingtoneUri)
+//                currentRingtone?.play()
+//                stopButton.visibility = View.VISIBLE
+//
+////                ringtone.play()
+//            }
+//        }
+//        handler.postDelayed(runnable, 0)
+//    }
+
     private fun startCountDownTimer() {
         val updateInterval: Long = 100  // We update every 100 milliseconds
         var ringtone = RingtoneManager.getRingtone(this, selectedRingtoneUri)
+        var beepRingtoneUri = getBeepRingtoneUri()
+//        var beepRingtone: Ringtone? = null
+        if (beepRingtoneUri != null) {
+            beepRingtone = RingtoneManager.getRingtone(this, beepRingtoneUri)
+        }
 
         runnable = Runnable {
-            if (timeLeftInMilliseconds > 0) {
+            if (timeLeftInMilliseconds > 3000) {
                 updateTimerText(timeLeftInMilliseconds)
-                progressBar.progress =
-                    timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
+                progressBar.progress = timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
                 timeLeftInMilliseconds -= updateInterval
                 handler.postDelayed(runnable, updateInterval)  // Update every 100 milliseconds
                 currentRingtone?.stop()
+            } else if (timeLeftInMilliseconds > 0) {
+                beepRingtone?.play()
+                updateTimerText(timeLeftInMilliseconds)
+                progressBar.progress = timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
+                timeLeftInMilliseconds -= updateInterval
+                handler.postDelayed(runnable, updateInterval)  // Update every 100 milliseconds
             } else if (loopCount-- > 0) {
+                beepRingtone?.stop()
                 timeLeftInMilliseconds = initialTimeInMilliseconds
                 startCountDownTimer()
             } else {
+                beepRingtone?.stop()
+
                 timerTextView.text = "Finished!"
 
                 progressBar.visibility = View.GONE
@@ -189,16 +259,17 @@ class MainActivity : AppCompatActivity() {
                 currentRingtone = RingtoneManager.getRingtone(this, selectedRingtoneUri)
                 currentRingtone?.play()
                 stopButton.visibility = View.VISIBLE
-
-//                ringtone.play()
             }
         }
         handler.postDelayed(runnable, 0)
     }
 
+
+
     private fun cancelTimer() {
         handler.removeCallbacks(runnable) // This stops the timer
         stopTimer()
+        beepRingtone?.stop() // This stops the beep sound
         updateTimerText(0)
         progressBar.visibility = View.GONE
         cancelButton.visibility = View.GONE
@@ -268,6 +339,20 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun getBeepRingtoneUri(): Uri? {
+        val manager = RingtoneManager(this)
+        manager.setType(RingtoneManager.TYPE_RINGTONE)
+        val cursor: Cursor = manager.cursor
+        var beepUri: Uri? = null
+        while (cursor.moveToNext()) {
+            val ringtoneTitle = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX)
+            if (ringtoneTitle == "Beep Once") {
+                beepUri = manager.getRingtoneUri(cursor.position)
+                break
+            }
+        }
+        return beepUri
+    }
 
     override fun onDestroy() {
         super.onDestroy()
