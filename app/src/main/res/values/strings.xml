@@ -9,4 +9,7 @@
     <string name="seconds">Seconds</string>
     <string name="cancel">Cancel</string>
     <string name="pause">Pause</string>
+    <string name="finished">Finished</string>
+    <string name="resume">Resume</string>
+    <string name="sound_icon_description">Sound</string>
 </resources>

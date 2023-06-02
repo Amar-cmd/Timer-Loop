@@ -1,15 +1,21 @@
 package com.heeraya.timerloop
 
+import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.NumberPicker
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -27,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var cancelButton: Button
     private lateinit var pauseButton: Button
+    private lateinit var selectedRingtoneUri: Uri
 
     private var loopCount = 0
     private var initialTimeInMilliseconds: Long = 0
@@ -47,6 +54,15 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progress_bar)
         cancelButton = findViewById(R.id.cancel_button)
         pauseButton = findViewById(R.id.pause_button)
+
+        val toolbar: Toolbar = findViewById(R.id.my_toolbar)
+        setSupportActionBar(toolbar)
+
+        val soundIcon: ImageButton = findViewById(R.id.sound_icon)
+        soundIcon.setOnClickListener {
+            val intent = Intent(this, RingtoneListActivity::class.java)
+            startActivity(intent)
+        }
 
         startButton.setOnClickListener { startTimer() }
         stopButton.setOnClickListener { stopTimer() }
@@ -69,8 +85,15 @@ class MainActivity : AppCompatActivity() {
         secondPicker.maxValue = 59
         loopPicker.minValue = 1
         loopPicker.maxValue = 10
-    }
 
+        val sharedPreferences = getSharedPreferences("ringtone_prefs", Context.MODE_PRIVATE)
+        val selectedRingtoneUriString = sharedPreferences.getString("selected_ringtone_uri", null)
+        selectedRingtoneUri = if (selectedRingtoneUriString != null) {
+            Uri.parse(selectedRingtoneUriString)
+        } else {
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+        }
+    }
 
     private fun checkStartButton() {
         val totalSeconds = hourPicker.value * 3600 + minutePicker.value * 60 + secondPicker.value
@@ -86,58 +109,6 @@ class MainActivity : AppCompatActivity() {
         window.decorView.systemUiVisibility = if (isDarkTheme()) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
     }
 
-
-//    private fun startTimer() {
-//        val hoursToMilliseconds = hourPicker.value * 60 * 60 * 1000
-//        val minutesToMilliseconds = minutePicker.value * 60 * 1000
-//        val secondsToMilliseconds = secondPicker.value * 1000
-//        initialTimeInMilliseconds = hoursToMilliseconds + minutesToMilliseconds + secondsToMilliseconds.toLong()
-//        timeLeftInMilliseconds = initialTimeInMilliseconds
-//        loopCount = loopPicker.value - 1  // Decrease loopCount by 1 before the first run
-//
-//        // Hide number pickers and show progress bar
-//        hourPicker.visibility = View.GONE
-//        minutePicker.visibility = View.GONE
-//        secondPicker.visibility = View.GONE
-//        loopPicker.visibility = View.GONE
-//        progressBar.visibility = View.VISIBLE
-//        progressBar.max = (initialTimeInMilliseconds / 1000).toInt()
-//
-//        // Reset the handler and runnable if they have been initialized previously
-//        if (this::handler.isInitialized && this::runnable.isInitialized) {
-//            handler.removeCallbacks(runnable)
-//        }
-//
-//        // Initialize the handler
-//        handler = Handler(Looper.getMainLooper())
-//
-//        startCountDownTimer()
-//    }
-//
-//    private fun startCountDownTimer() {
-//        runnable = Runnable {
-//            if (timeLeftInMilliseconds > 0) {
-//                updateTimerText(timeLeftInMilliseconds)
-//                progressBar.progress = (timeLeftInMilliseconds / 1000).toInt()
-//                timeLeftInMilliseconds -= 1000
-//                handler.postDelayed(runnable, 1000)
-//            } else if (loopCount-- > 0) {
-//                timeLeftInMilliseconds = (hourPicker.value * 60 * 60 * 1000 + minutePicker.value * 60 * 1000 + secondPicker.value).toLong() * 1000
-//                startCountDownTimer()
-//            } else {
-//                timerTextView.text = "Finished!"
-//                // Hide progress bar and show number pickers
-//                progressBar.visibility = View.GONE
-//                hourPicker.visibility = View.VISIBLE
-//                minutePicker.visibility = View.VISIBLE
-//                secondPicker.visibility = View.VISIBLE
-//                loopPicker.visibility = View.VISIBLE
-//            }
-//        }
-//        handler.postDelayed(runnable, 0)
-//    }
-
-
     private fun startTimer() {
         val hoursToMilliseconds = hourPicker.value * 60 * 60 * 1000
         val minutesToMilliseconds = minutePicker.value * 60 * 1000
@@ -146,14 +117,13 @@ class MainActivity : AppCompatActivity() {
         timeLeftInMilliseconds = initialTimeInMilliseconds
         loopCount = loopPicker.value - 1  // Decrease loopCount by 1 before the first run
 
-        // Hide number pickers and show progress bar
         hourPicker.visibility = View.GONE
         minutePicker.visibility = View.GONE
         secondPicker.visibility = View.GONE
         loopPicker.visibility = View.GONE
-    startButton.visibility = View.GONE
-    stopButton.visibility = View.GONE
-    resetButton.visibility = View.GONE
+        startButton.visibility = View.GONE
+        stopButton.visibility = View.GONE
+        resetButton.visibility = View.GONE
         progressBar.visibility = View.VISIBLE
         cancelButton.visibility = View.VISIBLE
         pauseButton.visibility = View.VISIBLE
@@ -161,19 +131,18 @@ class MainActivity : AppCompatActivity() {
 
         progressBar.max = initialTimeInMilliseconds.toInt()  // The max progress corresponds to the total time
 
-        // Reset the handler and runnable if they have been initialized previously
         if (this::handler.isInitialized && this::runnable.isInitialized) {
             handler.removeCallbacks(runnable)
         }
 
-        // Initialize the handler
         handler = Handler(Looper.getMainLooper())
 
         startCountDownTimer()
     }
 
     private fun startCountDownTimer() {
-        val updateInterval: Long = 50  // We update every 100 milliseconds
+        val updateInterval: Long = 100  // We update every 100 milliseconds
+        var ringtone = RingtoneManager.getRingtone(this, selectedRingtoneUri)
 
         runnable = Runnable {
             if (timeLeftInMilliseconds > 0) {
@@ -181,12 +150,15 @@ class MainActivity : AppCompatActivity() {
                 progressBar.progress = timeLeftInMilliseconds.toInt()  // The current progress corresponds to the time left
                 timeLeftInMilliseconds -= updateInterval
                 handler.postDelayed(runnable, updateInterval)  // Update every 100 milliseconds
+                if (ringtone.isPlaying) {
+                    ringtone.stop()
+                }
             } else if (loopCount-- > 0) {
                 timeLeftInMilliseconds = initialTimeInMilliseconds
                 startCountDownTimer()
             } else {
                 timerTextView.text = "Finished!"
-                // Hide progress bar and show number pickers
+
                 progressBar.visibility = View.GONE
                 cancelButton.visibility = View.GONE
                 pauseButton.visibility = View.GONE
@@ -198,6 +170,7 @@ class MainActivity : AppCompatActivity() {
                 stopButton.visibility = View.VISIBLE
                 resetButton.visibility = View.VISIBLE
 
+                ringtone.play()
             }
         }
         handler.postDelayed(runnable, 0)
@@ -205,9 +178,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun cancelTimer() {
         stopTimer()
-//        resetTimer()
         updateTimerText(0)
-        // Hide progress bar and Cancel, Pause buttons
         progressBar.visibility = View.GONE
         cancelButton.visibility = View.GONE
         pauseButton.visibility = View.GONE
@@ -215,7 +186,6 @@ class MainActivity : AppCompatActivity() {
         minutePicker.visibility = View.VISIBLE
         secondPicker.visibility = View.VISIBLE
         loopPicker.visibility = View.VISIBLE
-        // Show start button
         startButton.visibility = View.VISIBLE
         stopButton.visibility = View.VISIBLE
         resetButton.visibility = View.VISIBLE
@@ -223,11 +193,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun pauseOrResumeTimer() {
         if (pauseButton.text == "Pause") {
-            // Pause the timer
             handler.removeCallbacks(runnable)
             pauseButton.text = "Resume"
         } else {
-            // Resume the timer
             handler.postDelayed(runnable, 0)
             pauseButton.text = "Pause"
         }
@@ -248,21 +216,11 @@ class MainActivity : AppCompatActivity() {
         timeLeftInMilliseconds = 0
         initialTimeInMilliseconds = 0
         updateTimerText(0)
-        // Hide Cancel and Pause buttons
         cancelButton.visibility = View.GONE
         pauseButton.visibility = View.GONE
-        // Show start button
         startButton.visibility = View.VISIBLE
         startButton.isEnabled = false
     }
-
-//    private fun updateTimerText(timeLeftInMilliseconds: Long) {
-//        val hours = TimeUnit.MILLISECONDS.toHours(timeLeftInMilliseconds).toInt() % 24
-//        val minutes = TimeUnit.MILLISECONDS.toMinutes(timeLeftInMilliseconds).toInt() % 60
-//        val seconds = TimeUnit.MILLISECONDS.toSeconds(timeLeftInMilliseconds).toInt() % 60
-//
-//        timerTextView.text = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
-//    }
 
     private fun updateTimerText(timeLeftInMilliseconds: Long) {
         val hours = TimeUnit.MILLISECONDS.toHours(timeLeftInMilliseconds)
@@ -276,6 +234,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        val ringtone = RingtoneManager.getRingtone(this, selectedRingtoneUri)
+        if (ringtone.isPlaying) {
+            ringtone.stop()
+        }
+
         if (this::handler.isInitialized && this::runnable.isInitialized) {
             handler.removeCallbacks(runnable)
         }
